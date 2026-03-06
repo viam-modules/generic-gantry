@@ -1,0 +1,25 @@
+{
+  "$schema": "https://dl.viam.dev/module.schema.json",
+  "module_id": "viam:generic-gantry",
+  "visibility": "public",
+  "url": "https://github.com/viam-modules/generic-gantry",
+  "description": "Single-axis and multi-axis gantry components for Viam",
+  "models": [
+    {
+      "api": "rdk:component:gantry",
+      "model": "viam:generic-gantry:single-axis",
+      "short_description": "single-axis gantry with motor control, limit switches, and encoder homing"
+    },
+    {
+      "api": "rdk:component:gantry",
+      "model": "viam:generic-gantry:multi-axis",
+      "short_description": "multi-axis gantry composed of multiple single-axis sub-gantries"
+    }
+  ],
+  "build": {
+    "build": "make setup module",
+    "path": "bin/module.tar.gz",
+    "arch": ["linux/arm64", "linux/amd64"]
+  },
+  "entrypoint": "bin/generic-gantry"
+}
