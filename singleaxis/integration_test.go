@@ -5,11 +5,10 @@ import (
 	"math"
 	"testing"
 
-	"go.viam.com/test"
-
 	"go.viam.com/rdk/components/gantry"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/resource"
+	"go.viam.com/test"
 
 	"github.com/viam-modules/generic-gantry/testrig"
 )
@@ -26,6 +25,7 @@ func rigConfig(name string, rig *testrig.TestRig) resource.Config {
 		cfg.LimitSwitchPins = rig.LimitSwitchPins
 		cfg.LimitPinEnabled = &rig.LimitPinEnabled
 	}
+
 	return resource.Config{
 		Name:                name,
 		ConvertedAttributes: cfg,
@@ -39,6 +39,7 @@ func TestIntegrationHomeTwoSwitch(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("printer-x", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	homed, err := g.Home(ctx, nil)
@@ -63,6 +64,7 @@ func TestIntegrationHomeEncoderOnly(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("actuator", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	homed, err := g.Home(ctx, nil)
@@ -83,6 +85,7 @@ func TestIntegrationHomeOneSwitch(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("single-sw", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	homed, err := g.Home(ctx, nil)
@@ -102,6 +105,7 @@ func TestIntegrationMoveAfterHoming(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("printer-x", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	_, err = g.Home(ctx, nil)
@@ -143,6 +147,7 @@ func TestIntegrationOutOfRange(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("printer-x", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	_, err = g.Home(ctx, nil)
@@ -164,6 +169,7 @@ func TestIntegrationReconfigureWithoutRehoming(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("printer-x", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	_, err = g.Home(ctx, nil)
@@ -196,6 +202,7 @@ func TestIntegrationNotHomedErrors(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("printer-x", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	// Skip Home — operations should fail
@@ -215,6 +222,7 @@ func TestIntegrationHomeTwoSwitchCNC(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("cnc-x", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	homed, err := g.Home(ctx, nil)
@@ -244,6 +252,7 @@ func TestIntegrationHomeAndMoveSingleSwitch(t *testing.T) {
 
 	g, err := newSingleAxis(ctx, rig.Dependencies(), rigConfig("single-sw", rig), logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer g.Close(ctx)
 
 	homed, err := g.Home(ctx, nil)

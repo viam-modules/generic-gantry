@@ -7,8 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
-	"go.viam.com/utils"
-
 	"go.viam.com/rdk/components/gantry"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/operation"
@@ -16,6 +14,7 @@ import (
 	"go.viam.com/rdk/resource"
 	"go.viam.com/rdk/spatialmath"
 	rdkutils "go.viam.com/rdk/utils"
+	"go.viam.com/utils"
 )
 
 // Model is the model for the multi-axis gantry.
@@ -30,6 +29,7 @@ type Config struct {
 type multiAxis struct {
 	resource.Named
 	resource.AlwaysRebuild
+
 	subAxes            []gantry.Gantry
 	lengthsMm          []float64
 	logger             logging.Logger
@@ -48,6 +48,7 @@ func (conf *Config) Validate(path string) ([]string, []string, error) {
 	}
 
 	deps = append(deps, conf.SubAxes...)
+
 	return deps, nil, nil
 }
 
@@ -80,6 +81,7 @@ func newMultiAxis(
 		if err != nil {
 			return nil, errors.Wrapf(err, "no axes named [%s]", s)
 		}
+
 		mAx.subAxes = append(mAx.subAxes, subAx)
 	}
 
@@ -99,8 +101,10 @@ func newMultiAxis(
 		if err != nil {
 			return nil, err
 		}
+
 		frames = append(frames, k)
 	}
+
 	mAx.model, err = referenceframe.NewSerialModel(mAx.Name().Name, frames)
 	if err != nil {
 		return nil, err
@@ -110,21 +114,23 @@ func newMultiAxis(
 }
 
 // Home runs the homing sequence of the gantry and returns true once completed.
-func (g *multiAxis) Home(ctx context.Context, extra map[string]interface{}) (bool, error) {
+func (g *multiAxis) Home(ctx context.Context, extra map[string]any) (bool, error) {
 	for _, subAx := range g.subAxes {
 		homed, err := subAx.Home(ctx, nil)
 		if err != nil {
 			return false, err
 		}
+
 		if !homed {
 			return false, nil
 		}
 	}
+
 	return true, nil
 }
 
 // MoveToPosition moves along an axis using inputs in millimeters.
-func (g *multiAxis) MoveToPosition(ctx context.Context, positions, speeds []float64, extra map[string]interface{}) error {
+func (g *multiAxis) MoveToPosition(ctx context.Context, positions, speeds []float64, extra map[string]any) error {
 	ctx, done := g.opMgr.New(ctx)
 	defer done()
 
@@ -141,6 +147,7 @@ func (g *multiAxis) MoveToPosition(ctx context.Context, positions, speeds []floa
 
 	fs := []rdkutils.SimpleFunc{}
 	idx := 0
+
 	for _, subAx := range g.subAxes {
 		subAxNum, err := subAx.Lengths(ctx, extra)
 		if err != nil {
@@ -148,6 +155,7 @@ func (g *multiAxis) MoveToPosition(ctx context.Context, positions, speeds []floa
 		}
 
 		pos := positions[idx : idx+len(subAxNum)]
+
 		var speed []float64
 		// if speeds is an empty list, speed will be set to the default in the subAx MoveToPosition call
 		if len(speeds) == 0 {
@@ -155,10 +163,12 @@ func (g *multiAxis) MoveToPosition(ctx context.Context, positions, speeds []floa
 		} else {
 			speed = speeds[idx : idx+len(subAxNum)]
 		}
+
 		idx += len(subAxNum)
 
 		if g.moveSimultaneously {
 			singleGantry := subAx
+
 			fs = append(fs, func(ctx context.Context) error { return singleGantry.MoveToPosition(ctx, pos, speed, nil) })
 		} else {
 			err = subAx.MoveToPosition(ctx, pos, speed, extra)
@@ -167,11 +177,13 @@ func (g *multiAxis) MoveToPosition(ctx context.Context, positions, speeds []floa
 			}
 		}
 	}
+
 	if g.moveSimultaneously {
 		if _, err := rdkutils.RunInParallel(ctx, fs); err != nil {
 			return multierr.Combine(err, g.Stop(ctx, nil))
 		}
 	}
+
 	return nil
 }
 
@@ -184,59 +196,76 @@ func (g *multiAxis) GoToInputs(ctx context.Context, inputSteps ...[]referencefra
 
 		// MoveToPosition will use the default gantry speed when an empty float is passed in
 		speeds := []float64{}
+
 		err := g.MoveToPosition(ctx, goal, speeds, nil)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 // Position returns the position in millimeters.
-func (g *multiAxis) Position(ctx context.Context, extra map[string]interface{}) ([]float64, error) {
+func (g *multiAxis) Position(ctx context.Context, extra map[string]any) ([]float64, error) {
 	positions := []float64{}
+
 	for _, subAx := range g.subAxes {
 		pos, err := subAx.Position(ctx, extra)
 		if err != nil {
 			return nil, err
 		}
+
 		positions = append(positions, pos...)
 	}
+
 	return positions, nil
 }
 
 // Lengths returns the physical lengths of all axes of a multi-axis Gantry.
-func (g *multiAxis) Lengths(ctx context.Context, extra map[string]interface{}) ([]float64, error) {
+func (g *multiAxis) Lengths(ctx context.Context, extra map[string]any) ([]float64, error) {
 	lengths := []float64{}
+
 	for _, subAx := range g.subAxes {
 		lng, err := subAx.Lengths(ctx, extra)
 		if err != nil {
 			return nil, err
 		}
+
 		lengths = append(lengths, lng...)
 	}
+
 	return lengths, nil
 }
 
 // Stop stops the subaxes of the gantry simultaneously.
 // Bug fix: now waits for all stop goroutines and collects/returns errors.
-func (g *multiAxis) Stop(ctx context.Context, extra map[string]interface{}) error {
+func (g *multiAxis) Stop(ctx context.Context, extra map[string]any) error {
 	ctx, done := g.opMgr.New(ctx)
 	defer done()
-	var mu sync.Mutex
-	var errs []error
+
+	var (
+		mu   sync.Mutex
+		errs []error
+	)
+
 	for _, subAx := range g.subAxes {
 		currG := subAx
+
 		g.workers.Add(1)
 		utils.ManagedGo(func() {
-			if err := currG.Stop(ctx, extra); err != nil {
+			err := currG.Stop(ctx, extra)
+			if err != nil {
 				mu.Lock()
+
 				errs = append(errs, err)
 				mu.Unlock()
 			}
 		}, g.workers.Done)
 	}
+
 	g.workers.Wait()
+
 	return multierr.Combine(errs...)
 }
 
@@ -250,15 +279,17 @@ func (g *multiAxis) IsMoving(ctx context.Context) (bool, error) {
 	return g.opMgr.OpRunning(), nil
 }
 
-func (g *multiAxis) Geometries(ctx context.Context, extra map[string]interface{}) ([]spatialmath.Geometry, error) {
+func (g *multiAxis) Geometries(ctx context.Context, extra map[string]any) ([]spatialmath.Geometry, error) {
 	inputs, err := g.CurrentInputs(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	gif, err := g.model.Geometries(inputs)
 	if err != nil {
 		return nil, err
 	}
+
 	return gif.Geometries(), nil
 }
 
@@ -271,6 +302,7 @@ func (g *multiAxis) CurrentInputs(ctx context.Context) ([]referenceframe.Input, 
 	if len(g.subAxes) == 0 {
 		return nil, errors.New("no subaxes found for inputs")
 	}
+
 	positions, err := g.Position(ctx, nil)
 	if err != nil {
 		return nil, err

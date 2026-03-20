@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
 	pb "go.viam.com/api/component/board/v1"
-
 	"go.viam.com/rdk/components/board"
 	"go.viam.com/rdk/resource"
 )
@@ -30,35 +28,37 @@ func NewLimitSwitchPin(motor *SimulatedMotor, threshold float64, isMax, limitHig
 	}
 }
 
-func (p *LimitSwitchPin) Get(ctx context.Context, extra map[string]interface{}) (bool, error) {
+func (p *LimitSwitchPin) Get(ctx context.Context, extra map[string]any) (bool, error) {
 	pos, err := p.motor.Position(ctx, nil)
 	if err != nil {
 		return false, err
 	}
+
 	triggered := (p.isMax && pos >= p.threshold) || (!p.isMax && pos <= p.threshold)
 	if p.limitHigh {
 		return triggered, nil
 	}
+
 	return !triggered, nil
 }
 
-func (p *LimitSwitchPin) Set(ctx context.Context, high bool, extra map[string]interface{}) error {
+func (p *LimitSwitchPin) Set(ctx context.Context, high bool, extra map[string]any) error {
 	return nil
 }
 
-func (p *LimitSwitchPin) PWM(ctx context.Context, extra map[string]interface{}) (float64, error) {
+func (p *LimitSwitchPin) PWM(ctx context.Context, extra map[string]any) (float64, error) {
 	return 0, nil
 }
 
-func (p *LimitSwitchPin) SetPWM(ctx context.Context, dutyCyclePct float64, extra map[string]interface{}) error {
+func (p *LimitSwitchPin) SetPWM(ctx context.Context, dutyCyclePct float64, extra map[string]any) error {
 	return nil
 }
 
-func (p *LimitSwitchPin) PWMFreq(ctx context.Context, extra map[string]interface{}) (uint, error) {
+func (p *LimitSwitchPin) PWMFreq(ctx context.Context, extra map[string]any) (uint, error) {
 	return 0, nil
 }
 
-func (p *LimitSwitchPin) SetPWMFreq(ctx context.Context, freqHz uint, extra map[string]interface{}) error {
+func (p *LimitSwitchPin) SetPWMFreq(ctx context.Context, freqHz uint, extra map[string]any) error {
 	return nil
 }
 
@@ -67,6 +67,7 @@ type SimulatedBoard struct {
 	resource.Named
 	resource.TriviallyCloseable
 	resource.TriviallyReconfigurable
+
 	pins map[string]*LimitSwitchPin
 }
 
@@ -83,6 +84,7 @@ func (b *SimulatedBoard) GPIOPinByName(name string) (board.GPIOPin, error) {
 	if !ok {
 		return nil, errors.Errorf("pin %q not found", name)
 	}
+
 	return pin, nil
 }
 
@@ -99,17 +101,17 @@ func (b *SimulatedBoard) AnalogNames() []string { return nil }
 func (b *SimulatedBoard) DigitalInterruptNames() []string { return nil }
 
 func (b *SimulatedBoard) SetPowerMode(
-	ctx context.Context, mode pb.PowerMode, duration *time.Duration, extra map[string]interface{},
+	ctx context.Context, mode pb.PowerMode, duration *time.Duration, extra map[string]any,
 ) error {
 	return errors.New("not supported")
 }
 
 func (b *SimulatedBoard) StreamTicks(
-	ctx context.Context, interrupts []board.DigitalInterrupt, ch chan board.Tick, extra map[string]interface{},
+	ctx context.Context, interrupts []board.DigitalInterrupt, ch chan board.Tick, extra map[string]any,
 ) error {
 	return errors.New("not supported")
 }
 
-func (b *SimulatedBoard) DoCommand(ctx context.Context, cmd map[string]interface{}) (map[string]interface{}, error) {
+func (b *SimulatedBoard) DoCommand(ctx context.Context, cmd map[string]any) (map[string]any, error) {
 	return nil, nil
 }

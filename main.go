@@ -4,12 +4,13 @@ package main
 import (
 	"context"
 
-	"github.com/viam-modules/generic-gantry/multiaxis"
-	"github.com/viam-modules/generic-gantry/singleaxis"
 	"go.viam.com/rdk/components/gantry"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/module"
 	"go.viam.com/utils"
+
+	"github.com/viam-modules/generic-gantry/multiaxis"
+	"github.com/viam-modules/generic-gantry/singleaxis"
 )
 
 func main() {
@@ -32,10 +33,12 @@ func mainWithArgs(ctx context.Context, args []string, logger logging.Logger) err
 
 	err = mod.Start(ctx)
 	defer mod.Close(ctx)
+
 	if err != nil {
 		return err
 	}
 
 	<-ctx.Done()
+
 	return nil
 }

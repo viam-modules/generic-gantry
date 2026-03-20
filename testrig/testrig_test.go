@@ -68,7 +68,9 @@ func TestSimulatedMotorStop(t *testing.T) {
 	test.That(t, err, test.ShouldBeNil)
 
 	pos1, _ := m.Position(ctx, nil)
+
 	time.Sleep(20 * time.Millisecond)
+
 	pos2, _ := m.Position(ctx, nil)
 
 	// Position should be frozen after stop

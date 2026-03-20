@@ -5,8 +5,6 @@ import (
 	"math"
 	"testing"
 
-	"go.viam.com/test"
-
 	"go.viam.com/rdk/components/board"
 	"go.viam.com/rdk/components/gantry"
 	"go.viam.com/rdk/components/motor"
@@ -14,6 +12,7 @@ import (
 	"go.viam.com/rdk/referenceframe"
 	"go.viam.com/rdk/resource"
 	"go.viam.com/rdk/testutils/inject"
+	"go.viam.com/test"
 
 	"github.com/viam-modules/generic-gantry/singleaxis"
 	"github.com/viam-modules/generic-gantry/testrig"
@@ -47,6 +46,7 @@ func buildSingleAxis(
 	}
 
 	deps := make(resource.Dependencies)
+
 	deps[motor.Named(rig.MotorName)] = rig.Motor
 	if rig.Board != nil {
 		deps[board.Named(rig.BoardName)] = rig.Board
@@ -63,29 +63,30 @@ func buildSingleAxis(
 
 // wrapWithKinematics wraps a real gantry with an inject that provides a simple kinematics model,
 // since singleAxis without a kinematics file returns nil from Kinematics().
-func wrapWithKinematics(name string, real gantry.Gantry) *inject.Gantry {
+func wrapWithKinematics(name string, inner gantry.Gantry) *inject.Gantry {
 	wrapped := inject.NewGantry(name)
-	wrapped.PositionFunc = func(ctx context.Context, extra map[string]interface{}) ([]float64, error) {
-		return real.Position(ctx, extra)
+	wrapped.PositionFunc = func(ctx context.Context, extra map[string]any) ([]float64, error) {
+		return inner.Position(ctx, extra)
 	}
-	wrapped.MoveToPositionFunc = func(ctx context.Context, pos, speed []float64, extra map[string]interface{}) error {
-		return real.MoveToPosition(ctx, pos, speed, extra)
+	wrapped.MoveToPositionFunc = func(ctx context.Context, pos, speed []float64, extra map[string]any) error {
+		return inner.MoveToPosition(ctx, pos, speed, extra)
 	}
-	wrapped.LengthsFunc = func(ctx context.Context, extra map[string]interface{}) ([]float64, error) {
-		return real.Lengths(ctx, extra)
+	wrapped.LengthsFunc = func(ctx context.Context, extra map[string]any) ([]float64, error) {
+		return inner.Lengths(ctx, extra)
 	}
-	wrapped.StopFunc = func(ctx context.Context, extra map[string]interface{}) error {
-		return real.Stop(ctx, extra)
+	wrapped.StopFunc = func(ctx context.Context, extra map[string]any) error {
+		return inner.Stop(ctx, extra)
 	}
-	wrapped.HomeFunc = func(ctx context.Context, extra map[string]interface{}) (bool, error) {
-		return real.Home(ctx, extra)
+	wrapped.HomeFunc = func(ctx context.Context, extra map[string]any) (bool, error) {
+		return inner.Home(ctx, extra)
 	}
 	wrapped.CloseFunc = func(ctx context.Context) error {
-		return real.Close(ctx)
+		return inner.Close(ctx)
 	}
 	wrapped.KinematicsFunc = func(ctx context.Context) (referenceframe.Model, error) {
 		return referenceframe.NewSimpleModel(name), nil
 	}
+
 	return wrapped
 }
 
@@ -105,6 +106,7 @@ func TestIntegrationMultiAxisHomingAndMove(t *testing.T) {
 
 	realX := buildSingleAxis(ctx, t, "axis-x", rigX, logger)
 	defer realX.Close(ctx)
+
 	realY := buildSingleAxis(ctx, t, "axis-y", rigY, logger)
 	defer realY.Close(ctx)
 
@@ -133,6 +135,7 @@ func TestIntegrationMultiAxisHomingAndMove(t *testing.T) {
 
 	ma, err := newMultiAxis(ctx, deps, maCfg, logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer ma.Close(ctx)
 
 	// Both axes should be near center (~150mm each)
@@ -168,6 +171,7 @@ func TestIntegrationMultiAxisStop(t *testing.T) {
 
 	realX := buildSingleAxis(ctx, t, "axis-x", rigX, logger)
 	defer realX.Close(ctx)
+
 	realY := buildSingleAxis(ctx, t, "axis-y", rigY, logger)
 	defer realY.Close(ctx)
 
@@ -192,6 +196,7 @@ func TestIntegrationMultiAxisStop(t *testing.T) {
 
 	ma, err := newMultiAxis(ctx, deps, maCfg, logger)
 	test.That(t, err, test.ShouldBeNil)
+
 	defer ma.Close(ctx)
 
 	err = ma.MoveToPosition(ctx, []float64{100, 200}, []float64{500, 500}, nil)

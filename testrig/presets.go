@@ -14,7 +14,7 @@ type TestRig struct {
 	BoardName       string
 	LimitSwitchPins []string
 	LimitPinEnabled bool
-	LengthMm       float64
+	LengthMm        float64
 	MmPerRevolution float64
 	GantryMmPerSec  float64
 }
@@ -22,10 +22,12 @@ type TestRig struct {
 // Dependencies returns a resource.Dependencies map suitable for passing to newSingleAxis.
 func (r *TestRig) Dependencies() resource.Dependencies {
 	deps := make(resource.Dependencies)
+
 	deps[motor.Named(r.MotorName)] = r.Motor
 	if r.Board != nil {
 		deps[board.Named(r.BoardName)] = r.Board
 	}
+
 	return deps
 }
 
@@ -34,10 +36,11 @@ func (r *TestRig) Dependencies() resource.Dependencies {
 func NewPrinterXAxis() *TestRig {
 	m := NewSimulatedMotor("motor1", 4.0) // 160mm into 300mm range
 	pins := map[string]*LimitSwitchPin{
-		"pin0": NewLimitSwitchPin(m, 0.0, false, true),  // min endstop
-		"pin1": NewLimitSwitchPin(m, 7.5, true, true),   // max endstop at 300mm / 40mm/rev
+		"pin0": NewLimitSwitchPin(m, 0.0, false, true), // min endstop
+		"pin1": NewLimitSwitchPin(m, 7.5, true, true),  // max endstop at 300mm / 40mm/rev
 	}
 	b := NewSimulatedBoard("board1", pins)
+
 	return &TestRig{
 		Motor:           m,
 		Board:           b,
@@ -56,10 +59,11 @@ func NewPrinterXAxis() *TestRig {
 func NewCNCMillXAxis() *TestRig {
 	m := NewSimulatedMotor("motor1", 60.0) // 300mm center
 	pins := map[string]*LimitSwitchPin{
-		"pin0": NewLimitSwitchPin(m, 0.0, false, true),   // min endstop
-		"pin1": NewLimitSwitchPin(m, 120.0, true, true),  // max endstop at 600mm / 5mm/rev
+		"pin0": NewLimitSwitchPin(m, 0.0, false, true),  // min endstop
+		"pin1": NewLimitSwitchPin(m, 120.0, true, true), // max endstop at 600mm / 5mm/rev
 	}
 	b := NewSimulatedBoard("board1", pins)
+
 	return &TestRig{
 		Motor:           m,
 		Board:           b,
@@ -77,6 +81,7 @@ func NewCNCMillXAxis() *TestRig {
 // with no limit switches, 500mm travel, 8mm per revolution.
 func NewLinearActuator() *TestRig {
 	m := NewSimulatedMotor("motor1", 0.0)
+
 	return &TestRig{
 		Motor:           m,
 		Board:           nil,
@@ -98,6 +103,7 @@ func NewSingleSwitchAxis() *TestRig {
 		"pin0": NewLimitSwitchPin(m, 0.0, false, true), // min endstop
 	}
 	b := NewSimulatedBoard("board1", pins)
+
 	return &TestRig{
 		Motor:           m,
 		Board:           b,
