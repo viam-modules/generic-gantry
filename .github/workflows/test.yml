@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  test_and_lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: make test
+        run: make test
+
+      - name: Verify no uncommitted changes from make lint
+        run: |
+          make lint
+          GEN_DIFF=$(git diff)
+          if [ -n "$GEN_DIFF" ]; then
+              echo '"make lint" resulted in changes not in git' 1>&2
+              git status
+              exit 1
+          fi

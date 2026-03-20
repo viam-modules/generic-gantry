@@ -1,0 +1,55 @@
+name: Build & publish to registry
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Verify no uncommitted changes from make lint
+        run: |
+          make lint
+          GEN_DIFF=$(git diff)
+          if [ -n "$GEN_DIFF" ]; then
+              echo '"make lint" resulted in changes not in git' 1>&2
+              git status
+              exit 1
+          fi
+
+  build_and_upload:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        arch: [arm64, amd64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build module
+        run: GOARCH=${{ matrix.arch }} make module
+
+      - name: Upload
+        uses: viamrobotics/upload-module@main
+        with:
+          module-path: bin/module.tar.gz
+          platform: linux/${{ matrix.arch }}
+          version: ${{ github.ref_name }}
+          ref: ${{ github.sha }}
+          key-id: ${{ secrets.VIAM_DEV_API_KEY_ID }}
+          key-value: ${{ secrets.VIAM_DEV_API_KEY }}
