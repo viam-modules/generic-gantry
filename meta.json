@@ -8,12 +8,14 @@
     {
       "api": "rdk:component:gantry",
       "model": "viam:generic-gantry:single-axis",
-      "short_description": "single-axis gantry with motor control, limit switches, and encoder homing"
+      "short_description": "single-axis gantry with motor control, limit switches, and encoder homing",
+      "markdown_link": "README.md#model-viamgeneric-gantrysingle-axis"
     },
     {
       "api": "rdk:component:gantry",
       "model": "viam:generic-gantry:multi-axis",
-      "short_description": "multi-axis gantry composed of multiple single-axis sub-gantries"
+      "short_description": "multi-axis gantry composed of multiple single-axis sub-gantries",
+      "markdown_link": "README.md#model-viamgeneric-gantrymulti-axis"
     }
   ],
   "build": {
