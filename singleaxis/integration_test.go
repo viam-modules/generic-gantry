@@ -184,7 +184,7 @@ func TestIntegrationReconfigureWithoutRehoming(t *testing.T) {
 	newRig := testrig.NewPrinterXAxis()
 	newRig.GantryMmPerSec = 600
 	newCfg := rigConfig("printer-x", newRig)
-	err = g.Reconfigure(ctx, newRig.Dependencies(), newCfg)
+	err = sa.Reconfigure(ctx, newRig.Dependencies(), newCfg)
 	test.That(t, err, test.ShouldBeNil)
 
 	test.That(t, sa.positionLimits, test.ShouldResemble, savedLimits)
