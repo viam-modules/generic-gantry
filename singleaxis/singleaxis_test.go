@@ -257,7 +257,7 @@ func TestReconfigure(t *testing.T) {
 			MmPerRevolution: 10,
 		},
 	}
-	err = fakegantry.Reconfigure(ctx, deps, newconf)
+	err = g.Reconfigure(ctx, deps, newconf)
 	test.That(t, err, test.ShouldBeNil)
 
 	test.That(t, g.limitSwitchPins, test.ShouldResemble, []string{"1", "3"})
