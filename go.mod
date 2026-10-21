@@ -6,10 +6,10 @@ require (
 	github.com/golang/geo v0.0.0-20260302211937-87f5a40ea07a
 	github.com/pkg/errors v0.9.1
 	go.uber.org/multierr v1.11.0
-	go.viam.com/api v0.1.590
-	go.viam.com/rdk v1.12.0
+	go.viam.com/api v0.1.597
+	go.viam.com/rdk v1.13.0
 	go.viam.com/test v1.2.5
-	go.viam.com/utils v0.14.0
+	go.viam.com/utils v0.14.1
 )
 
 require (
